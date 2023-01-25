@@ -32,9 +32,9 @@ static void fft_recurse(float* x, float complex* X, unsigned int n, unsigned int
 }
 
 // Wrapper for recursive function call
-void fft(float* x, float complex* X, unsigned int n) {
+void fft(float* sig_td, float complex* sig_fd, unsigned int n) {
 	// TODO: check params for validity here (not inside fft_recurse)
-	fft_recurse(x, X, n, 1);
+	fft_recurse(sig_td, sig_fd, n, 1);
 }
 
 // Reads freq domain signal from X
@@ -59,7 +59,7 @@ static void ifft_recurse(float* x, float complex* x, unsigned int n, unsigned in
 }
 
 // Wrapper for recursive function call
-void ifft(float* x, float complex* X, unsigned int n) {
+void ifft(float* sig_td, float complex* sig_fd, unsigned int n) {
 	// TODO: check params for validity
-	ifft_recurse(x, X, n, 1);
+	ifft_recurse(sig_td, sig_fd, n, 1);
 }
