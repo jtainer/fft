@@ -9,9 +9,14 @@
 
 #include <complex.h>
 
-// Reads freq. domain signal from input buffer x
-// Writes time domain signal to output buffer X
+// Reads time domain signal from input buffer x
+// Writes freq domain signal to output buffer X
 // n (number of samples) must be a power of 2
 void fft(float* x, float complex* X, unsigned int n);
+
+// Reads freq. domain signal from X
+// Writes time domain signal to x
+// n (number of samples) must be a power of 2
+void ifft(float* c, float complex* X, unsigned int n);
 
 #endif
