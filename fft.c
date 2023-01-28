@@ -41,7 +41,7 @@ void fft(float* sig_td, float complex* sig_fd, unsigned int n) {
 // Writes time domain signal to x
 // n (number of samples) must be a power of 2
 // s (stride length) must be 1 for initial function call
-static void ifft_recurse(float* x, float complex* x, unsigned int n, unsigned int s) {
+static void ifft_recurse(float* x, float complex* X, unsigned int n, unsigned int s) {
 	if (n == 1) {
 		x[0] = crealf(X[0]);
 	}
