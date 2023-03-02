@@ -71,3 +71,17 @@ void ifft(float* sig_td, float complex* sig_fd, unsigned int n) {
 		sig_td[i] = crealf(sig_fd[i]);
 	}
 }
+
+// Complex time domain signal in sig is overwritten
+// with freq domain signal
+// n = sample count
+void fft_inpl(float complex* sig, unsigned int n) {
+	fft_recurse(sig, n, 1);
+}
+
+// Complex freq domain signal in sig is overwritten
+// with time domain signal
+// n = sample count
+void ifft_inpl(float complex* sig, unsigned int n) {
+	ifft_recurse(sig, n, 1);
+}
