@@ -5,6 +5,7 @@
 //
 
 #include "fft.h"
+#include <stdlib.h>
 #include <math.h>
 
 // Input time domain signal in buf
@@ -16,7 +17,7 @@ static void fft_recurse(float complex* buf, unsigned int n, unsigned int s) {
 
 	// Recursively split the DFT in halves
 	fft_recurse(buf, n/2, s*2);
-	fft_recurse(buf+n/2, n/2, 2*s);
+	fft_recurse(buf+n/2, n/2, s*2);
 
 	// Combine halves into full DFT
 	for (unsigned int k = 0; k < n/2; k++) {
@@ -48,6 +49,7 @@ void fft(float* sig_td, float complex* sig_fd, unsigned int n) {
 static void ifft_recurse(float complex* buf, unsigned int n, unsigned int s) {
 	if (n == 1) return;
 
+	// Split DFT in half
 	for (unsigned int k = 0; k < n/2; k++) {
 		float complex u = cexpf(I*-2.f*M_PI*k/n);
 		float complex q = (buf[k] - buf[k+n/2]) / 2.f;
@@ -55,6 +57,8 @@ static void ifft_recurse(float complex* buf, unsigned int n, unsigned int s) {
 		buf[k] = p;
 		buf[k+n/2] = q / u;
 	}
+
+	// Recursively split DFT in half until n == 1
 	ifft_recurse(buf, n/2, s*2);
 	ifft_recurse(buf+n/2, n/2, s*2);
 }
@@ -84,4 +88,67 @@ void fft_inpl(float complex* sig, unsigned int n) {
 // n = sample count
 void ifft_inpl(float complex* sig, unsigned int n) {
 	ifft_recurse(sig, n, 1);
+}
+
+fft_param_cache fft_create_param_cache(unsigned int n) {
+	fft_param_cache param;
+	param.n = n;
+	param.lut = malloc(sizeof(float complex)*n/2);
+	fft_init_param_cache(param);
+	return param;
+}
+
+void fft_init_param_cache(fft_param_cache param) {
+	for (unsigned int k = 0; k < param.n/2; k++) {
+		param.lut[k] = cexpf(I*-2*M_PI*k/param.n);
+	}
+}
+
+void fft_destroy_param_cache(fft_param_cache param) {
+	free(param.lut);
+}
+
+static void fft_recurse_cached(float complex* buf, fft_param_cache param, unsigned int s) {
+	if (param.n == 1) return;
+
+	// Recursively split the DFT in halves
+	fft_param_cache param_next = { param.n/2, param.lut };
+	fft_recurse_cached(buf, param_next, s*2);
+	fft_recurse_cached(buf+param.n/2, param_next, s*2);
+
+	// Combine halves into full DFT
+	for (unsigned int k = 0; k < param.n/2; k++) {
+		float complex p = buf[k];
+		float complex u = param.lut[k*s];
+		float complex q = u * buf[k+param.n/2];
+		buf[k] = p + q;
+		buf[k+param.n/2] = p - q;
+	}
+
+}
+
+static void ifft_recurse_cached(float complex* buf, fft_param_cache param, unsigned int s) {
+	if (param.n == 1) return;
+
+	// Split DFT in half
+	for (unsigned int k = 0; k < param.n/2; k++) {
+		float complex u = param.lut[k*s];
+		float complex q = (buf[k] - buf[k+param.n/2]) / 2.f;
+		float complex p = buf[k] - q;
+		buf[k] = p;
+		buf[k+param.n/2] = q / u;
+	}
+	
+	// Recursively split DFT in half until n == 1
+	fft_param_cache param_next = { param.n/2, param.lut };
+	ifft_recurse_cached(buf, param_next, s*2);
+	ifft_recurse_cached(buf+param.n/2, param_next, s*2);
+}
+
+void fft_inpl_cached(float complex* sig, fft_param_cache param) {
+	ifft_recurse_cached(sig, param, 1);
+}
+
+void ifft_inpl_cached(float complex* sig, fft_param_cache param) {
+	ifft_recurse_cached(sig, param, 1);
 }

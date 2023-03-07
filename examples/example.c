@@ -10,23 +10,17 @@
 
 int main() {
 	// buffer size must be a power of 2
-	const unsigned int n = 8;
-	float* input = malloc(sizeof(float) * n);
-	float complex* output = malloc(sizeof(float complex) * n);
+	const unsigned int n = 1024*1024*1024;
+	float complex* signal = malloc(sizeof(float complex) * n);
+	fft_param_cache param = fft_create_param_cache(n);
 
-	// Store some data in the input buffer
-	for (unsigned int i = 0; i < n; i++) {
-		input[i] = (float) rand() / RAND_MAX;
-	}
+	// Test using cached parameters
+	fft_inpl_cached(signal, param);
 
-	fft(input, output, n);
+	// Test without cached paramterers
+//	fft_inpl(signal, n);
 
-	for (unsigned int i = 0; i < n; i++) {
-		printf("%f\t%f\n", crealf(output[i]), cimagf(output[i]));
-	}
-
-	free(input);
-	free(output);
+	free(signal);
 
 	return 0;
 }
