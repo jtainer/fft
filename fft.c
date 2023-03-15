@@ -6,7 +6,36 @@
 
 #include "fft.h"
 #include <stdlib.h>
+#include <stdio.h>
 #include <math.h>
+
+// Calculate corresponding index for reorder
+static unsigned int reverse_bits(unsigned int orig, unsigned int bits) {
+	unsigned int orig0 = orig;
+	unsigned int flip = 0;
+	for (unsigned int i = 0; i < bits; i++) {
+		flip <<= 1;
+		flip |= orig & 1;
+		orig >>= 1;
+	}
+	printf("bits = %u\torig = %u\tflip = %u\n", bits, orig0, flip);
+	return flip;
+}
+
+// Reorder data so FFT can be computer in-place
+static void fft_reorder(float complex* buf, unsigned int n) {
+	unsigned int bits = 0;
+	while ((n >> bits) > 1) bits++;
+	for (unsigned int i = 0; i < n; i++) {
+		unsigned int i0 = i;
+		unsigned int i1 = reverse_bits(i0, bits);
+		if (i1 <= i0) {
+			float complex tmp = buf[i0];
+			buf[i0] = buf[i1];
+			buf[i1] = tmp;
+		}
+	}
+}
 
 // Input time domain signal in buf
 // Convert to freq domain and store result in buf
@@ -39,6 +68,7 @@ void fft(float* sig_td, float complex* sig_fd, unsigned int n) {
 		sig_fd[i] = sig_td[i] + 0*I;
 	}
 
+	fft_reorder(sig_fd, n);
 	fft_recurse(sig_fd, n, 1);
 }
 
@@ -69,6 +99,7 @@ static void ifft_recurse(float complex* buf, unsigned int n, unsigned int s) {
 void ifft(float* sig_td, float complex* sig_fd, unsigned int n) {
 	// Calculate FFT in-place in the freq domain signal buffer
 	ifft_recurse(sig_fd, n, 1);
+	fft_reorder(sig_fd, n);
 
 	// Copy real component of freq domain buffer to time domain buffer
 	for (unsigned int i = 0; i < n; i++) {
@@ -80,6 +111,7 @@ void ifft(float* sig_td, float complex* sig_fd, unsigned int n) {
 // with freq domain signal
 // n = sample count
 void fft_inpl(float complex* sig, unsigned int n) {
+	fft_reorder(sig, n);
 	fft_recurse(sig, n, 1);
 }
 
@@ -88,6 +120,7 @@ void fft_inpl(float complex* sig, unsigned int n) {
 // n = sample count
 void ifft_inpl(float complex* sig, unsigned int n) {
 	ifft_recurse(sig, n, 1);
+	fft_reorder(sig, n);
 }
 
 fft_param_cache fft_create_param_cache(unsigned int n) {
@@ -146,9 +179,11 @@ static void ifft_recurse_cached(float complex* buf, fft_param_cache param, unsig
 }
 
 void fft_inpl_cached(float complex* sig, fft_param_cache param) {
-	ifft_recurse_cached(sig, param, 1);
+	fft_reorder(sig, param.n);
+	fft_recurse_cached(sig, param, 1);
 }
 
 void ifft_inpl_cached(float complex* sig, fft_param_cache param) {
 	ifft_recurse_cached(sig, param, 1);
+	fft_reorder(sig, param.n);
 }
