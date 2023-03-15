@@ -11,14 +11,12 @@
 
 // Calculate corresponding index for reorder
 static unsigned int reverse_bits(unsigned int orig, unsigned int bits) {
-	unsigned int orig0 = orig;
 	unsigned int flip = 0;
 	for (unsigned int i = 0; i < bits; i++) {
 		flip <<= 1;
 		flip |= orig & 1;
 		orig >>= 1;
 	}
-	printf("bits = %u\torig = %u\tflip = %u\n", bits, orig0, flip);
 	return flip;
 }
 
