@@ -1,7 +1,7 @@
 // 
 // Fast Fourier Transform using Cooley-Tukey algorithm
 //
-// 2022, Jonathan Tainer
+// Copyright (c) 2022-2023, Jonathan Tainer. Subject to the BSD 2-Clause License.
 //
 
 #include "fft.h"
